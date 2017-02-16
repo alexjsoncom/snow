@@ -1,0 +1,110 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>snow</title>
+<style>
+    canvas{
+        /* background: url(1.jpg) 0 0 no-repeat; */
+        background: url(2.jpeg) 0 0 no-repeat;
+        /* background: url(3.png) 0 0 no-repeat; */
+    }
+</style>
+</head>
+<body>
+    <canvas width="800" height="800" id="cas"></canvas>
+</body>
+<script>
+
+    // 生成n - m 的随机数
+    function rnd(n, m) {
+        return Math.floor(Math.random() * (m - n) + n);
+    };
+
+    // 角度转弧度
+    function toRadian(angle){
+        return angle * Math.PI / 180;
+    }
+
+    var cas = document.getElementById("cas");
+    var ctx = cas.getContext("2d");
+    // 画布最大宽度
+    var maxW = 800;
+    // 画布最大高度
+    var maxH = 800;
+
+    // 存放雪花的数组
+    var snows = [];
+
+    // 先生成一开始出现的雪花
+    for (var i = 0; i < 100; i++) {
+        snows.push({
+            "left": rnd(0, 800), // 雪花x坐标随机数
+            "top": rnd(0, 600),  // 雪花y坐标随机数
+            "deg": rnd(-10, 10), // 偏移角度
+            "radius": rnd(2, 10)  // 雪花半径
+        });
+    }
+
+    setInterval(function() {
+
+        // 清除整个画布 重新绘制所有雪花
+        ctx.clearRect(0, 0, cas.width, cas.height);
+        // 保存当前绘制状态
+        ctx.save();
+
+        for (var i = 0; i < snows.length; i++) {
+
+            // 垂直高度偏移
+            var h = 0.5 * snows[i].radius;
+
+            // 水平 x 值 增加一定的偏移
+            snows[i].left = snows[i].left + Math.tan(toRadian(snows[i].deg)) * h;
+            // 垂直 y 值 增加一定的偏移
+            snows[i].top = snows[i].top + h;
+
+            // 删除 x y值超出画布雪花(这样可以增加新的雪花)
+            if (snows[i].left < 0 || snows[i].left > maxW || snows[i].top > maxH) {
+                snows.splice(i--, 1);
+                continue;
+            }
+
+            // 雪花的半径
+            var r_i = snows[i].radius;
+
+            // 放射性渐变 模拟雪花外形
+            var ra = ctx.createRadialGradient(snows[i].left, snows[i].top, r_i / 4, snows[i].left, snows[i].top, r_i);
+            ra.addColorStop(0, "rgba(255,255,255,1)");
+            ra.addColorStop(1, "rgba(255,255,255,0.1)");
+            ctx.fillStyle = ra;
+
+            ctx.beginPath();
+            // 绘制雪花圆
+            ctx.arc(snows[i].left, snows[i].top, r_i, 0, 2 * Math.PI);
+            ctx.fill();
+        }
+
+        // 恢复绘制状态
+        ctx.restore();
+    }, 16);
+
+    // 增加雪花(y 值 从 0 开始）
+    function snow() {
+        setTimeout(function() {
+            if (snows.length < 200) {
+                for (var i = 0; i < 20; i++) {
+                    snows.push({
+                        "left": rnd(0, 800),
+                        "top": 0,
+                        "deg": rnd(-10, 10),
+                        "radius": rnd(2, 10)
+                    });
+                }
+            }
+            snow();
+        }, Math.random() * 200 + 500);
+    };
+
+    snow();
+</script>
+</html>
